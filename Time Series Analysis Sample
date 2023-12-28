@@ -1,0 +1,69 @@
+import pandas as pd
+
+# Load the dataset
+ukr_acled_df = pd.read_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/UKR_ACLED.xlsx')
+ukraine1_df = pd.read_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/1.Ukraine(2012.11.21-2014.12.31).xlsx')
+ukraine2_df = pd.read_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/2.Ukraine(2019.03.11-2022.05.10).xlsx')
+russia2020_df = pd.read_csv('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/2020 LiveUAMap russia.txt', delimiter='\t')
+russia2021_df = pd.read_csv('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/2021 LiveUAMap russia.txt', delimiter='\t')
+
+combined_df = pd.concat([ukr_acled_df, ukraine1_df, ukraine2_df, russia2020_df, russia2021_df], ignore_index=True)
+
+combined_df.to_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/combined_dataset.xlsx', index=False)
+# or
+combined_df.to_csv('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/combined_dataset.csv', index=False)
+
+# Define event types and their corresponding time windows as a dictionary
+event_windows = {
+    'Coalition or Alliance': (0, 0),  # Occurs at 't'
+    'Oligarchic Power Build-up': (30, 48),
+    'Exporting Corruption': (38, 50),
+    'Illicit Financing': (50, 68),
+    'Censor, Disinformation, Propaganda': (70, 142),
+    'Cyber Attack': (144, 166),
+    'Election Interfering': (200, 319),
+    'Diplomatic Pressure': (200, 330),
+    'Political Subversion': (230, 344),
+    'Coerce': (246, 345),
+    'Intelligence Operation': (250, 352),
+    'Assassination': (300, 466),
+    'Uprising/Internal Turmoil': (320, 474),
+    'Military Exercise': (400, 500),
+    'Military Build-up': (400, 519),
+    'Special Force Operation': (680, 781),
+    'Explosion/Remote Violence': (700, 786),
+    'Violence Against Civilians': (788, 797),
+    'Military/Mercenary Attack': (800, 841),
+    'Limited War/Hybrid Warfare Battle': (841, 882)
+}
+
+# Assuming 'event_date' is the column with the dates of the events
+# and 'event_type' is the column with the type of events
+# Convert 'event_date' to datetime if it's not already
+df['event_date'] = pd.to_datetime(df['event_date'])
+
+# Define the 't' time, the baseline time from which the 't +' times are measured
+# This could be the date of the first event or a specific date you define
+t_time = df['event_date'].min()
+
+# Create a new column with the days after 't'
+df['days_after_t'] = (df['event_date'] - t_time).dt.days
+
+# Initialize a dictionary to store the significant periods for each event type
+significant_periods = {}
+
+# Analyze each event type
+for event_type, (start_day, end_day) in event_windows.items():
+    # Filter events by type and time window
+    event_period_df = df[(df['event_type'] == event_type) & 
+                         (df['days_after_t'] >= start_day) & 
+                         (df['days_after_t'] <= end_day)]
+    
+    # Check if the event is significantly detected (more than once) in the period
+    if event_period_df.shape[0] > 1:
+        # Store the period's start and end day if significant
+        significant_periods[event_type] = (start_day, end_day)
+
+# Output the significant periods for each event type
+for event_type, period in significant_periods.items():
+    print(f"{event_type} significant period: t + {period}")
