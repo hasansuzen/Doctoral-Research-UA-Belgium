@@ -1,0 +1,54 @@
+import pandas as pd
+import numpy as np
+
+# Define a hypothetical function to load data (replace with actual loading code)
+def load_data(file_path):
+    if file_path.endswith('.csv'):
+        return pd.read_csv(file_path)
+    elif file_path.endswith('.xlsx'):
+        return pd.read_excel(file_path)
+    else:
+        raise ValueError("Unrecognized file format")
+
+# Load your datasets (replace 'file_path' with the actual paths)
+crisis_data_1946_2000 = load_data('file_path_to_Phoenix_Armed_Conflict_1946_2019.csv')
+crisis_data_2000_2022 = load_data('file_path_to_UKR_ACLED.xlsx')
+
+# ... Load other datasets as needed ...
+
+# Filter the datasets for the periods 1946-2000 and 2000-2022
+crisis_data_1946_2000 = crisis_data_1946_2000[crisis_data_1946_2000['year'] <= 2000]
+crisis_data_2000_2022 = crisis_data_2000_2022[(crisis_data_2000_2022['year'] > 2000) & (crisis_data_2000_2022['year'] <= 2022)]
+
+# Define your event types and intervention types as strings
+event_types = ['Embargo', 'Naval Blockade', ...]  # Please complete the list
+intervention_types = ['Hybrid Warfare', 'Limited War', ...]  # Please complete the list
+
+# Define a function that classifies each event
+def classify_event(row, event_keywords):
+    # Assuming there's a column named 'description' to check for the keywords
+    if any(keyword in row['description'] for keyword in event_keywords):
+        return 1
+    return 0
+
+# Classify events for each dataset
+for event_type in event_types:
+    crisis_data_1946_2000[event_type] = crisis_data_1946_2000.apply(classify_event, axis=1, args=([event_type],))
+    crisis_data_2000_2022[event_type] = crisis_data_2000_2022.apply(classify_event, axis=1, args=([event_type],))
+
+# Calculate correlation matrices for each period
+correlation_matrix_1946_2000 = crisis_data_1946_2000[event_types].corr()
+correlation_matrix_2000_2022 = crisis_data_2000_2022[event_types].corr()
+
+# Compare correlations between the two periods
+correlation_differences = correlation_matrix_2000_2022 - correlation_matrix_1946_2000
+
+# Output the results
+print("Correlation Matrix 1946-2000:")
+print(correlation_matrix_1946_2000)
+
+print("Correlation Matrix 2000-2022:")
+print(correlation_matrix_2000_2022)
+
+print("Differences in Correlation between the two periods:")
+print(correlation_differences)
