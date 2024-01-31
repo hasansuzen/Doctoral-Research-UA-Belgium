@@ -1,0 +1,69 @@
+import pandas as pd
+
+# Load the datasets
+ukr_acled_df = pd.read_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/UKR_ACLED.xlsx')
+ukraine1_df = pd.read_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/1.Ukraine(2012.11.21-2014.12.31).xlsx')
+ukraine2_df = pd.read_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/2.Ukraine(2019.03.11-2022.05.10).xlsx')
+russia2020_df = pd.read_csv('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/2020 LiveUAMap russia.txt', delimiter='\t')
+russia2021_df = pd.read_csv('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/2021 LiveUAMap russia.txt', delimiter='\t')
+
+# Combine the datasets
+combined_df = pd.concat([ukr_acled_df, ukraine1_df, ukraine2_df, russia2020_df, russia2021_df], ignore_index=True)
+
+# Save the combined dataset
+combined_df.to_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/combined_dataset.xlsx', index=False)
+combined_df.to_csv('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/combined_dataset.csv', index=False)
+import re
+
+# Define trigger term dictionaries
+military_buildup_terms = [
+    "Increase", "Growth", "Number of Military Forces", "Equipment", "intensify",
+    "Strengthen Military Activities", "Presence Soldiers", "Troops", "Military",
+    "Army", "Militias Stationed", "Deployed Near the Border", "Rebel/Opposition Control Area",
+    "Field", "Unusual Concentration of Troops", "Military Activity", "Formation in the Vicinity",
+    "Near the Border", "Border Tension", "Influx of Equipment", "Balancing",
+    "Extending Deterrence", "Allied Assurance", "Adaptation", "Tailored Assurance",
+    "Deterrence Measures"
+]
+
+cyber_espionage_terms = [
+    "Cyber Incursion", "Attack", "Destruction", "Espionage", "Penetrate", "Hacking",
+    "Denial of Service Attack", "Dos Attacks", "Disable Networks", "Deface the Websites",
+    "Loss of Service", "Steal", "Breach Data", "Computer/Information Systems", "Phishing",
+    "Malware", "Zero-Day Exploit", "SQL Injection", "Ransomware Incident"
+]
+
+# Other event types can be defined similarly...
+
+# Function to classify event type based on the text content
+def classify_event(text):
+    for term in military_buildup_terms:
+        if re.search(term, text, re.IGNORECASE):
+            return "Military Build-up"
+    for term in cyber_espionage_terms:
+        if re.search(term, text, re.IGNORECASE):
+            return "Cyber Espionage/State-Sponsored Cyber Attack"
+    # Add more event type checks here...
+    return "Unknown"
+
+# Apply the classification function to each row in the dataset
+combined_df['Event Type'] = combined_df['text_column_name'].apply(classify_event)
+
+# Now you can filter events, for example:
+military_buildup_events = combined_df[combined_df['Event Type'] == 'Military Build-up']
+cyber_events = combined_df[combined_df['Event Type'] == 'Cyber Espionage/State-Sponsored Cyber Attack']
+
+# Extract other properties like Initiating Actor ID, Start Date, End Date, Location, and Impact, assuming these are column names
+combined_df['Initiating Actor ID'] = combined_df['actor_id_column_name']  # Replace with actual column name
+combined_df['Start Date'] = combined_df['start_date_column_name']  # Replace with actual column name
+combined_df['End Date'] = combined_df['end_date_column_name']  # Replace with actual column name
+combined_df['Location'] = combined_df['location_column_name']  # Replace withactual column name
+combined_df['Impact'] = combined_df['impact_column_name']  # Replace with actual column name
+
+# You can now analyze the extracted event data
+# For example, to get a count of each event type:
+event_counts = combined_df['Event Type'].value_counts()
+
+# Save the classified and enriched dataset
+classified_dataset_path = '/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/classified_dataset.xlsx'
+combined_df.to_excel(classified_dataset_path, index=False)
