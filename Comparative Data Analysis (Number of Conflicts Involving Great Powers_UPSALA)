@@ -1,4 +1,4 @@
-import pandas as pd
+iport pandas as pd
 import matplotlib.pyplot as plt
 
 # Define the file path
@@ -95,4 +95,5 @@ axes[0].set_ylabel('Number of Conflicts')
 
 # Plot for 2000-2022
 counts_combined['2000-2022'].plot(kind='bar', stacked=True, ax=axes[1], colormap='tab20')
-axes[1].set_title
+axes[1].set_title('Number of Conflicts Involving Western Powers and Russia (2000-2022)')
+axes[0].set_ylabel('Number of Conflicts')
