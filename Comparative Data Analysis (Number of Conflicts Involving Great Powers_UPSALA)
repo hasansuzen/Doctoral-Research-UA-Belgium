@@ -58,28 +58,19 @@ period_2 = df_filtered[(df_filtered['year'] >= 2000) & (df_filtered['year'] <= 2
 print(f"Period 1946-1999 contains {len(period_1)} rows.")
 print(f"Period 2000-2022 contains {len(period_2)} rows.")
 
-# Step 9: Count conflicts for each country in each period
-count_period_1 = period_1['side_a'].value_counts()
-count_period_2 = period_2['side_a'].value_counts()
-
-# Debug: Print counts
-print("Conflict counts for 1946-1999:")
-print(count_period_1)
-print("Conflict counts for 2000-2022:")
-print(count_period_2)
+# Step 9: Count conflicts for each country and type of conflict in each period
+count_period_1 = period_1.groupby(['side_a', 'type_of_conflict']).size().unstack(fill_value=0)
+count_period_2 = period_2.groupby(['side_a', 'type_of_conflict']).size().unstack(fill_value=0)
 
 # Step 10: Combine counts into a DataFrame
-counts = pd.DataFrame({
-    '1946-1999': count_period_1,
-    '2000-2022': count_period_2
-}).fillna(0)
+counts_combined = pd.concat([count_period_1, count_period_2], keys=['1946-1999', '2000-2022'], axis=1).fillna(0)
 
 # Debug: Print the combined DataFrame
 print("Combined conflict counts:")
-print(counts)
+print(counts_combined)
 
 # Check if the DataFrame is empty
-if counts.empty:
+if counts_combined.empty:
     print("No conflict data to plot.")
     exit()
 
@@ -92,13 +83,16 @@ name_mapping = {
 }
 
 # Apply the name mapping
-counts.index = counts.index.map(name_mapping)
+counts_combined.rename(index=name_mapping, inplace=True)
 
 # Step 12: Plotting
-counts.plot(kind='bar', figsize=(12, 6))
-plt.title('Number of Conflicts Involving Western Powers and Russia')
-plt.xlabel('Country')
-plt.ylabel('Number of Conflicts')
-plt.xticks(rotation=0)
-plt.legend(title='Period')
-plt.show()
+fig, axes = plt.subplots(2, 1, figsize=(12, 12), sharex=True)
+
+# Plot for 1946-1999
+counts_combined['1946-1999'].plot(kind='bar', stacked=True, ax=axes[0], colormap='tab20')
+axes[0].set_title('Number of Conflicts Involving Western Powers and Russia (1946-1999)')
+axes[0].set_ylabel('Number of Conflicts')
+
+# Plot for 2000-2022
+counts_combined['2000-2022'].plot(kind='bar', stacked=True, ax=axes[1], colormap='tab20')
+axes[1].set_title
