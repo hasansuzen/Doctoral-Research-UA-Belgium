@@ -1,0 +1,104 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Define the file path
+file_path = "/Users/hasansuzen/Downloads/UcdpPrioConflict_v23_1.csv"
+
+# Step 1: Read the CSV file and handle potential file not found error
+try:
+    df = pd.read_csv(file_path)
+except FileNotFoundError:
+    print(f"Error: The file at {file_path} was not found.")
+    exit()
+
+# Step 2: Check if the required columns exist
+required_columns = {'year', 'side_a', 'type_of_conflict'}
+if not required_columns.issubset(df.columns):
+    print(f"Error: The CSV file must contain the following columns: {required_columns}")
+    print(f"Available columns: {df.columns.tolist()}")
+    exit()
+
+# Step 3: Ensure the 'year' column is of integer type
+if not pd.api.types.is_integer_dtype(df['year']):
+    print("Warning: The 'year' column is not of integer type. Attempting to convert...")
+    df['year'] = pd.to_numeric(df['year'], errors='coerce').dropna().astype(int)
+
+# Step 4: Inspect the unique values in the 'side_a' column
+print("Unique values in 'side_a' column:")
+print(df['side_a'].unique())
+
+# Step 5: Inspect the range and type of 'year' column
+print("Range of years in the dataset:")
+print(df['year'].min(), df['year'].max())
+
+# Step 6: Print the first few rows of the dataset
+print("Sample data:")
+print(df.head())
+
+# Step 7: Filter data for the specific years and countries
+countries = [
+    'Government of Russia (Soviet Union)', 
+    'Government of United States of America', 
+    'Government of United Kingdom', 
+    'Government of France'
+]
+df_filtered = df[(df['year'] >= 1946) & (df['year'] <= 2022) & (df['side_a'].isin(countries))]
+
+# Debug: Check if filtering worked
+print(f"Filtered data contains {len(df_filtered)} rows.")
+if df_filtered.empty:
+    print("No data available for the specified filters.")
+    exit()
+
+# Step 8: Split into two periods
+period_1 = df_filtered[(df_filtered['year'] >= 1946) & (df_filtered['year'] <= 1999)]
+period_2 = df_filtered[(df_filtered['year'] >= 2000) & (df_filtered['year'] <= 2022)]
+
+# Debug: Check the number of rows in each period
+print(f"Period 1946-1999 contains {len(period_1)} rows.")
+print(f"Period 2000-2022 contains {len(period_2)} rows.")
+
+# Step 9: Count conflicts for each country in each period
+count_period_1 = period_1['side_a'].value_counts()
+count_period_2 = period_2['side_a'].value_counts()
+
+# Debug: Print counts
+print("Conflict counts for 1946-1999:")
+print(count_period_1)
+print("Conflict counts for 2000-2022:")
+print(count_period_2)
+
+# Step 10: Combine counts into a DataFrame
+counts = pd.DataFrame({
+    '1946-1999': count_period_1,
+    '2000-2022': count_period_2
+}).fillna(0)
+
+# Debug: Print the combined DataFrame
+print("Combined conflict counts:")
+print(counts)
+
+# Check if the DataFrame is empty
+if counts.empty:
+    print("No conflict data to plot.")
+    exit()
+
+# Step 11: Map full names to short names
+name_mapping = {
+    'Government of Russia (Soviet Union)': 'Russia',
+    'Government of United States of America': 'US',
+    'Government of United Kingdom': 'UK',
+    'Government of France': 'France'
+}
+
+# Apply the name mapping
+counts.index = counts.index.map(name_mapping)
+
+# Step 12: Plotting
+counts.plot(kind='bar', figsize=(12, 6))
+plt.title('Number of Conflicts Involving Western Powers and Russia')
+plt.xlabel('Country')
+plt.ylabel('Number of Conflicts')
+plt.xticks(rotation=0)
+plt.legend(title='Period')
+plt.show()
