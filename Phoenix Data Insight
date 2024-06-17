@@ -1,0 +1,111 @@
+import pandas as pd
+
+# Path to the CSV file
+file_path = "/Users/hasansuzen/Downloads/Armed.Conflict.1946_2019.csv"
+
+# Load the CSV file with a semicolon delimiter
+try:
+    data = pd.read_csv(file_path, delimiter=';', on_bad_lines='warn')
+except pd.errors.ParserError as e:
+    print(f"Error reading the CSV file: {e}")
+
+# Display the column names and first few rows to understand the structure of the data
+print("Column Names:", data.columns)
+print(data.head())
+
+# Define the relevant countries mapping
+country_mapping = {
+    'EEC': 'European Economic Community', 
+    'EUR': 'European Union', 
+    'GBR': 'United Kingdom', 
+    'NAT': 'North Atlantic Treaty Organization', 
+    'RUS': 'Russia', 
+    'SUN': 'Soviet Union', 
+    'USA': 'United States of America', 
+    'FRA': 'France'
+}
+
+# Filter data for relevant countries
+filtered_data = data[data['side_a'].str.contains('|'.join(country_mapping.values()), na=False)]
+
+# Convert the date column to datetime
+filtered_data['year'] = pd.to_datetime(filtered_data['start_date'], errors='coerce').dt.year
+
+# Split data into two periods
+data_1946_1999 = filtered_data[(filtered_data['year'] >= 1946) & (filtered_data['year'] <= 1999)]
+data_since_2000 = filtered_data[filtered_data['year'] >= 2000]
+
+# Count the events for each country in the two periods
+counts_1946_1999 = data_1946_1999['side_a'].value_counts()
+counts_since_2000 = data_since_2000['side_a'].value_counts()
+
+# Create a DataFrame to display the counts
+counts_df = pd.DataFrame({
+    '1946-1999': counts_1946_1999,
+    'Since 2000': counts_since_2000
+}).fillna(0).astype(int)
+
+# Display the results
+print(counts_df)
+
+
+
+import pandas as pd
+
+# Path to the CSV file
+file_path = "/Users/hasansuzen/Downloads/Armed.Conflict.1946_2019.csv"
+
+# Load the CSV file with a semicolon delimiter
+try:
+    data = pd.read_csv(file_path, delimiter=';', on_bad_lines='warn')
+except pd.errors.ParserError as e:
+    print(f"Error reading the CSV file: {e}")
+
+# Display the column names and first few rows to understand the structure of the data
+print("Column Names:", data.columns)
+print(data.head())
+
+# Define the relevant conflict type for unconventional mass violence
+conflict_type_unconventional_mass_violence = 3  # Assuming type '3' represents unconventional mass violence
+
+# Define the relevant countries mapping
+country_mapping = {
+    'EEC': 'European Economic Community', 
+    'EUR': 'European Union', 
+    'GBR': 'United Kingdom', 
+    'NAT': 'North Atlantic Treaty Organization', 
+    'RUS': 'Russia', 
+    'SUN': 'Soviet Union', 
+    'USA': 'United States of America', 
+    'FRA': 'France'
+}
+
+# Filter data for relevant conflict type and countries
+filtered_data = data[
+    (data['type_of_conflict'] == conflict_type_unconventional_mass_violence) & 
+    data['side_a'].str.contains('|'.join(country_mapping.values()), na=False)
+]
+
+# Convert the date column to datetime
+filtered_data['year'] = pd.to_datetime(filtered_data['start_date'], errors='coerce').dt.year
+
+# Split data into two periods
+data_1946_1999 = filtered_data[(filtered_data['year'] >= 1946) & (filtered_data['year'] <= 1999)]
+data_since_2000 = filtered_data[filtered_data['year'] >= 2000]
+
+# Count the events for each country in the two periods
+counts_1946_1999 = data_1946_1999['side_a'].value_counts()
+counts_since_2000 = data_since_2000['side_a'].value_counts()
+
+# Map the counts to the standardized country codes
+counts_1946_1999.index = counts_1946_1999.index.map(lambda x: [k for k, v in country_mapping.items() if v in x][0])
+counts_since_2000.index = counts_since_2000.index.map(lambda x: [k for k, v in country_mapping.items() if v in x][0])
+
+# Create a DataFrame to display the counts
+counts_df = pd.DataFrame({
+    '1946-1999': counts_1946_1999,
+    'Since 2000': counts_since_2000
+}).fillna(0).astype(int)
+
+# Display the results
+print(counts_df)
