@@ -1,0 +1,35 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Path to the CSV file
+file_path = "/Users/hasansuzen/Downloads/MID-5-Data-and-Supporting-Materials/MIDB 5.0.csv"
+
+# Read the CSV file into a DataFrame
+df = pd.read_csv(file_path)
+
+# Filter the data for the required countries
+countries = ['USA', 'UKG', 'FRN', 'RUS']
+df_filtered = df[df['stabb'].isin(countries)]
+
+# Filter the data for the time periods 1946-1999 and 2000-present
+df_1946_1999 = df_filtered[(df_filtered['styear'] >= 1946) & (df_filtered['styear'] <= 1999)]
+df_2000_present = df_filtered[df_filtered['styear'] >= 2000]
+
+# Count the number of disputes for each country in both periods
+disputes_1946_1999 = df_1946_1999['stabb'].value_counts()
+disputes_2000_present = df_2000_present['stabb'].value_counts()
+
+# Combine the results into a DataFrame for easier plotting
+disputes_combined = pd.DataFrame({
+    '1946-1999': disputes_1946_1999,
+    '2000-present': disputes_2000_present
+}).fillna(0)  # Fill NaN values with 0
+
+# Plotting the results
+fig, ax = plt.subplots(1, 2, figsize=(14, 7))
+disputes_combined['1946-1999'].plot(kind='bar', ax=ax[0], color='skyblue', title='1946-1999', xlabel='Country', ylabel='Number of Disputes')
+disputes_combined['2000-present'].plot(kind='bar', ax=ax[1], color='salmon', title='2000-present', xlabel='Country', ylabel='Number of Disputes')
+
+plt.suptitle('Number of Militarized Disputes Involving Great Powers')
+plt.tight_layout()
+plt.show()
