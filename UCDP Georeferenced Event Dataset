@@ -1,0 +1,83 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# File path to the data
+file_path = "/Users/hasansuzen/Downloads/GEDEvent_v23_1.csv"
+
+# Load the data into a DataFrame
+try:
+    russia_us_events = pd.read_csv(file_path)
+    print("Data loaded successfully.")
+except FileNotFoundError:
+    print(f"File not found: {file_path}")
+    russia_us_events = pd.DataFrame()
+
+# Check if the DataFrame is loaded correctly
+print(russia_us_events.head())
+print(f"DataFrame shape: {russia_us_events.shape}")
+
+# Check for non-empty DataFrame
+if russia_us_events.empty:
+    print("The DataFrame is empty. Please check the data source.")
+else:
+    # Print unique values in 'side_a' and 'side_b' columns
+    print("Unique values in 'side_a':")
+    print(russia_us_events['side_a'].unique())
+    print("Unique values in 'side_b':")
+    print(russia_us_events['side_b'].unique())
+
+    # Filter data for the periods 1946-1999 and 2000-2022
+    period1 = russia_us_events[(russia_us_events['year'] >= 1946) & (russia_us_events['year'] <= 1999)]
+    period2 = russia_us_events[(russia_us_events['year'] >= 2000) & (russia_us_events['year'] <= 2022)]
+
+    # Debugging: Print the number of rows in each period
+    print(f"Number of events in 1946-1999: {period1.shape[0]}")
+    print(f"Number of events in 2000-2022: {period2.shape[0]}")
+
+    # Function to count events by region for a given period
+    def count_events_by_region(data):
+        grouped_data = data.groupby(['region'], group_keys=False).apply(lambda x: pd.Series({
+            'Russia': x[(x['side_a'].str.contains('Russia', na=False)) | (x['side_b'].str.contains('Russia', na=False))].shape[0],
+            'United States': x[(x['side_a'].str.contains('United States', na=False)) | (x['side_b'].str.contains('United States', na=False))].shape[0]
+        }))
+        # Debugging: Print the grouped data
+        print(grouped_data)
+        return grouped_data
+
+    # Count events for each period
+    event_counts_period1 = count_events_by_region(period1)
+    event_counts_period2 = count_events_by_region(period2)
+
+    # Print the event counts to verify
+    print("Event counts for 1946-1999:")
+    print(event_counts_period1)
+    print("Event counts for 2000-2022:")
+    print(event_counts_period2)
+
+    # Check if the event counts DataFrames are empty
+    if event_counts_period1.empty:
+        print("No events found for the period 1946-1999.")
+    if event_counts_period2.empty:
+        print("No events found for the period 2000-2022.")
+
+    # Plotting the results
+    fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(14, 16))
+
+    # Plot for the period 1946-1999
+    if not event_counts_period1.empty:
+        event_counts_period1.plot(kind='bar', stacked=True, ax=axes[0])
+        axes[0].set_title('Number of Organized Violence Events by Russia and the US by Region (1946-1999)')
+        axes[0].set_xlabel('Region')
+        axes[0].set_ylabel('Number of Events')
+    else:
+        axes[0].text(0.5, 0.5, 'No data available for 1946-1999', 
+                     horizontalalignment='center', verticalalignment='center', transform=axes[0].transAxes)
+        axes[0].set_title('Number of Organized Violence Events by Russia and the US by Region (1946-1999)')
+    
+    # Plot for the period 2000-2022
+    if not event_counts_period2.empty:
+        event_counts_period2.plot(kind='bar', stacked=True, ax=axes[1])
+        axes[1].set_title('Number of Organized Violence Events by Russia and the US by Region (2000-2022)')
+        axes[1].set_xlabel('Region')
+        axes[1].set_ylabel('Number of Events')
+    
