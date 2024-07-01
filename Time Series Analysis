@@ -1,16 +1,17 @@
 import pandas as pd
 
-# Load the dataset
+# Load the datasets
 ukr_acled_df = pd.read_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/UKR_ACLED.xlsx')
 ukraine1_df = pd.read_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/1.Ukraine(2012.11.21-2014.12.31).xlsx')
 ukraine2_df = pd.read_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/2.Ukraine(2019.03.11-2022.05.10).xlsx')
 russia2020_df = pd.read_csv('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/2020 LiveUAMap russia.txt', delimiter='\t')
 russia2021_df = pd.read_csv('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/2021 LiveUAMap russia.txt', delimiter='\t')
 
+# Combine the datasets into one DataFrame
 combined_df = pd.concat([ukr_acled_df, ukraine1_df, ukraine2_df, russia2020_df, russia2021_df], ignore_index=True)
 
+# Save the combined dataset to Excel and CSV files
 combined_df.to_excel('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/combined_dataset.xlsx', index=False)
-# or
 combined_df.to_csv('/Users/hasansuzen/Documents/UA PhD Currents/GitHub Datasets/combined_dataset.csv', index=False)
 
 # Define event types and their corresponding time windows as a dictionary
@@ -40,14 +41,14 @@ event_windows = {
 # Assuming 'event_date' is the column with the dates of the events
 # and 'event_type' is the column with the type of events
 # Convert 'event_date' to datetime if it's not already
-df['event_date'] = pd.to_datetime(df['event_date'])
+combined_df['event_date'] = pd.to_datetime(combined_df['event_date'])
 
 # Define the 't' time, the baseline time from which the 't +' times are measured
 # This could be the date of the first event or a specific date you define
-t_time = df['event_date'].min()
+t_time = combined_df['event_date'].min()
 
 # Create a new column with the days after 't'
-df['days_after_t'] = (df['event_date'] - t_time).dt.days
+combined_df['days_after_t'] = (combined_df['event_date'] - t_time).dt.days
 
 # Initialize a dictionary to store the significant periods for each event type
 significant_periods = {}
@@ -55,9 +56,9 @@ significant_periods = {}
 # Analyze each event type
 for event_type, (start_day, end_day) in event_windows.items():
     # Filter events by type and time window
-    event_period_df = df[(df['event_type'] == event_type) & 
-                         (df['days_after_t'] >= start_day) & 
-                         (df['days_after_t'] <= end_day)]
+    event_period_df = combined_df[(combined_df['event_type'] == event_type) & 
+                                  (combined_df['days_after_t'] >= start_day) & 
+                                  (combined_df['days_after_t'] <= end_day)]
     
     # Check if the event is significantly detected (more than once) in the period
     if event_period_df.shape[0] > 1:
@@ -67,3 +68,4 @@ for event_type, (start_day, end_day) in event_windows.items():
 # Output the significant periods for each event type
 for event_type, period in significant_periods.items():
     print(f"{event_type} significant period: t + {period}")
+
